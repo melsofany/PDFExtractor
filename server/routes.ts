@@ -83,17 +83,25 @@ function extractElectoralData(text: string, totalPages: number): ExtractedData {
         const nextLine = lines[j];
         
         // Check for committee name after "ومقرها:" or "ومـقـرهـا:"
-        if ((nextLine.includes('ومـقـرهـا') || nextLine.includes('ومقرها')) && !committeeName) {
-          // Try to extract the text after the colon (:)
-          const colonMatch = nextLine.match(/(?:ومـقـرهـا|ومقرها)\s*:\s*(.+)/);
+        if (!committeeName) {
+          // Try multiple patterns for "ومقرها"
+          const patterns = [
+            /(?:ومـقـرهـا|ومقرها|مقرها)\s*[:：]\s*(.+)/,  // With colon
+            /(?:ومـقـرهـا|ومقرها|مقرها)\s+(.+)/,          // With space
+          ];
           
-          if (colonMatch && colonMatch[1] && colonMatch[1].trim()) {
-            // Found text after colon on the same line
-            committeeName = colonMatch[1].trim();
-          } else {
-            // No colon or no text after colon, check the next line
+          for (const pattern of patterns) {
+            const match = nextLine.match(pattern);
+            if (match && match[1] && match[1].trim()) {
+              committeeName = match[1].trim();
+              break;
+            }
+          }
+          
+          // If pattern matched "ومقرها" but no text after, check next line
+          if (!committeeName && (nextLine.includes('ومـقـرهـا') || nextLine.includes('ومقرها') || nextLine.includes('مقرها'))) {
             const nextNextLine = lines[j + 1] || '';
-            if (nextNextLine && nextNextLine.trim()) {
+            if (nextNextLine && nextNextLine.trim() && !nextNextLine.match(/^\d+$/)) {
               committeeName = nextNextLine.trim();
             }
           }
@@ -102,7 +110,7 @@ function extractElectoralData(text: string, totalPages: number): ExtractedData {
         // Check for address (العنوان) - usually contains "شارع" or "وعنوانها"
         if ((nextLine.includes('شارع') || nextLine.includes('وعنوانها') || 
              nextLine.includes('عنوان') || nextLine.includes('طريق')) && !address) {
-          address = nextLine.replace('وعنوانها :', '').replace('-', '').trim();
+          address = nextLine.replace('وعنوانها :', '').replace('وعنوانها:', '').replace('-', '').trim();
         }
         
         // Check for sub-number (typically 3 digits)

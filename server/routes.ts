@@ -74,8 +74,7 @@ function extractElectoralData(text: string, totalPages: number): ExtractedData {
       }
       
       // Look ahead for school name, address, and sub-number
-      let schoolName = '';
-      let location = '';
+      let committeeName = '';
       let address = '';
       let subNumber = '000';
       
@@ -83,26 +82,31 @@ function extractElectoralData(text: string, totalPages: number): ExtractedData {
       for (let j = i + 1; j < Math.min(i + 15, lines.length); j++) {
         const nextLine = lines[j];
         
-        // Check for school/location name (المقر)
-        if ((nextLine.includes('مدرسة') || nextLine.includes('مركز')) && !location) {
-          location = nextLine;
-          if (!schoolName) {
-            schoolName = nextLine;
+        // Check for committee name after "ومقرها:" or "ومـقـرهـا:"
+        if (nextLine.includes('ومـقـرهـا') || nextLine.includes('ومقرها')) {
+          // Extract the text after "ومقرها:" on the same line
+          let nameAfterColon = nextLine.replace(/ومـقـرهـا\s*:?\s*/g, '').replace(/ومقرها\s*:?\s*/g, '').trim();
+          
+          if (nameAfterColon) {
+            committeeName = nameAfterColon;
+          } else {
+            // If nothing on the same line, check the next line
+            const nextNextLine = lines[j + 1] || '';
+            if (nextNextLine) {
+              committeeName = nextNextLine.trim();
+            }
           }
+        }
+        
+        // Check for school/location name if not found yet
+        if ((nextLine.includes('مدرسة') || nextLine.includes('مركز')) && !committeeName) {
+          committeeName = nextLine;
         }
         
         // Check for address (العنوان) - usually contains "شارع" or "وعنوانها"
         if ((nextLine.includes('شارع') || nextLine.includes('وعنوانها') || 
              nextLine.includes('عنوان') || nextLine.includes('طريق')) && !address) {
           address = nextLine.replace('وعنوانها :', '').replace('-', '').trim();
-        }
-        
-        // Check for general headquarters (ومـقـرهـا)
-        if (nextLine.includes('ومـقـرهـا') || nextLine.includes('ومقرها')) {
-          const nextNextLine = lines[j + 1] || '';
-          if ((nextNextLine.includes('مدرسة') || nextNextLine.includes('مركز')) && !location) {
-            location = nextNextLine;
-          }
         }
         
         // Check for sub-number (typically 3 digits)
@@ -116,9 +120,8 @@ function extractElectoralData(text: string, totalPages: number): ExtractedData {
       }
       
       currentCommittee = {
-        name: schoolName || 'لجنة انتخابية',
+        name: committeeName || 'لجنة انتخابية',
         subNumber: subNumber,
-        location: location || undefined,
         address: address || undefined,
         voters: []
       };

@@ -12,7 +12,6 @@ export type Voter = z.infer<typeof voterSchema>;
 export const committeeSchema = z.object({
   name: z.string(),
   subNumber: z.string(),
-  location: z.string().optional(), // المقر
   address: z.string().optional(), // العنوان
   voters: z.array(voterSchema),
 });

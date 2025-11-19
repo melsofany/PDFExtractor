@@ -152,28 +152,44 @@ function extractElectoralData(text: string, totalPages: number): ExtractedData {
 
 /**
  * Extract voters from a line containing multiple names with Arabic-Indic numbers
- * Format: "name1 ١ name2 ٢ name3 ٣"
+ * Format: "name1 ٣ name2 ٢ name3 ١" (numbers in reverse order)
  */
 function extractVotersFromLine(line: string): Voter[] {
   const voters: Voter[] = [];
   
-  // Split by Arabic-Indic digits (٠-٩) or Western digits
-  // Pattern matches: Arabic name followed by a number
-  const pattern = /([\u0600-\u06FF\s]+?)\s*([\u0660-\u0669]+|\d+)/g;
-  let match;
+  // Split by Arabic-Indic digits to get segments
+  const segments = line.split(/([\u0660-\u0669]+)/);
   
-  while ((match = pattern.exec(line)) !== null) {
-    const fullName = match[1].trim().replace(/\s+/g, ' ');
-    let serialNumber = match[2];
+  // Process pairs of (name, number)
+  for (let i = 0; i < segments.length - 1; i += 2) {
+    const namePart = segments[i].trim();
+    const numberPart = segments[i + 1];
     
-    // Convert Arabic-Indic digits to Western Arabic digits
-    serialNumber = serialNumber.replace(/[\u0660-\u0669]/g, (d) => 
+    if (!namePart || !numberPart) continue;
+    
+    // Extract the last complete name from the segment (after previous number)
+    // Names typically are 2-5 words
+    const words = namePart.split(/\s+/).filter(w => w.length > 1);
+    
+    // Take the last 2-5 words as the name (most common pattern)
+    let fullName = '';
+    if (words.length >= 2) {
+      // Take last 4 words (or all if less than 4)
+      const nameWords = words.slice(Math.max(0, words.length - 4));
+      fullName = nameWords.join(' ');
+    }
+    
+    // Convert Arabic-Indic digits to Western digits
+    const serialNumber = numberPart.replace(/[\u0660-\u0669]/g, (d) => 
       String.fromCharCode(d.charCodeAt(0) - 0x0660 + 48)
     );
     
-    // Validate name has at least 2 words
-    const nameWords = fullName.split(/\s+/).filter(word => word.length > 1);
-    if (nameWords.length >= 2 && fullName.length > 5) {
+    // Validate name
+    const validNameWords = fullName.split(/\s+/).filter(word => 
+      word.length > 1 && /[\u0600-\u06FF]/.test(word)
+    );
+    
+    if (validNameWords.length >= 2 && fullName.length > 5) {
       voters.push({
         serialNumber,
         fullName

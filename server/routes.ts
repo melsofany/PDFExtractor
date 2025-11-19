@@ -1,11 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import multer from "multer";
-import { createRequire } from "module";
 import type { ExtractedData, Committee, Voter } from "@shared/schema";
-
-const require = createRequire(import.meta.url);
-const pdfParse = require("pdf-parse").default || require("pdf-parse");
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -24,7 +20,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "يجب أن يكون الملف من نوع PDF" });
       }
 
-      // Parse PDF
+      // Parse PDF - dynamic import for CommonJS module
+      const pdfParse = (await import("pdf-parse")).default;
       const pdfData = await pdfParse(req.file.buffer);
       const text = pdfData.text;
       const numPages = pdfData.numpages;

@@ -157,6 +157,33 @@ function extractElectoralData(text: string, totalPages: number): ExtractedData {
 function extractVotersFromLine(line: string): Voter[] {
   const voters: Voter[] = [];
   
+  // Skip footer/metadata lines that appear at the end of each page
+  const footerPatterns = [
+    'الصفحة رقم من',
+    'انتخابات مجلس النواب',
+    'نموذج رقم',
+    'صفحة',
+    'التابعة للجنة العامة',
+    'ومقرها',
+    'وعنوانها',
+    'ومكوناتها',
+    'قسم',
+    'مراكز',
+    'محافظة'
+  ];
+  
+  // Check if line contains any footer pattern
+  for (const pattern of footerPatterns) {
+    if (line.includes(pattern)) {
+      return voters; // Return empty array
+    }
+  }
+  
+  // Skip lines that are too short or look like headers
+  if (line.length < 10 || line.includes('مسلسل') || line.includes('السم')) {
+    return voters;
+  }
+  
   // Split by Arabic-Indic digits (٠-٩) or Western digits
   // Pattern matches: Arabic name followed by a number
   const pattern = /([\u0600-\u06FF\s]+?)\s*([\u0660-\u0669]+|\d+)/g;
@@ -171,9 +198,17 @@ function extractVotersFromLine(line: string): Voter[] {
       String.fromCharCode(d.charCodeAt(0) - 0x0660 + 48)
     );
     
-    // Validate name has at least 2 words
+    // Skip if serial number is too large (likely year or page number)
+    const serialNum = parseInt(serialNumber);
+    if (serialNum > 10000) {
+      continue; // Skip entries like 2025, 897, etc.
+    }
+    
+    // Validate name has at least 2 words and doesn't contain common footer words
     const nameWords = fullName.split(/\s+/).filter(word => word.length > 1);
-    if (nameWords.length >= 2 && fullName.length > 5) {
+    const hasFooterWords = footerPatterns.some(p => fullName.includes(p));
+    
+    if (nameWords.length >= 2 && fullName.length > 5 && !hasFooterWords) {
       voters.push({
         serialNumber,
         fullName

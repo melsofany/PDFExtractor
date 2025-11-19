@@ -5,7 +5,7 @@ import { createRequire } from "module";
 import type { ExtractedData, Committee, Voter } from "@shared/schema";
 
 const require = createRequire(import.meta.url);
-const pdfParse = require("pdf-parse");
+const pdfParse = require("pdf-parse").default || require("pdf-parse");
 
 const upload = multer({
   storage: multer.memoryStorage(),

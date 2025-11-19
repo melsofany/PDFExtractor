@@ -17,6 +17,7 @@ export function DataPreviewTable({ data }: DataPreviewTableProps) {
         rows.push({
           committeeName: committee.name,
           committeeSubNumber: committee.subNumber,
+          committeeAddress: committee.address,
           voterSerialNumber: voter.serialNumber,
           voterFullName: voter.fullName,
         });
@@ -59,6 +60,9 @@ export function DataPreviewTable({ data }: DataPreviewTableProps) {
                 الرقم الفرعي
               </th>
               <th className="px-4 py-3 text-right text-sm font-semibold text-foreground">
+                العنوان
+              </th>
+              <th className="px-4 py-3 text-right text-sm font-semibold text-foreground">
                 رقم الناخب
               </th>
               <th className="px-4 py-3 text-right text-sm font-semibold text-foreground">
@@ -78,6 +82,9 @@ export function DataPreviewTable({ data }: DataPreviewTableProps) {
                 </td>
                 <td className="px-4 py-3 text-sm text-foreground">
                   {row.committeeSubNumber}
+                </td>
+                <td className="px-4 py-3 text-sm text-foreground">
+                  {row.committeeAddress || ""}
                 </td>
                 <td className="px-4 py-3 text-sm text-foreground">
                   {row.voterSerialNumber}

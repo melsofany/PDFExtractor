@@ -13,7 +13,7 @@ export async function exportToExcel(data: ExtractedData, filename: string = "ب�
   worksheet.views = [{ rightToLeft: true }];
 
   // Add headers
-  const headers = ["اسم اللجنة", "الرقم الفرعي", "المقر", "العنوان", "رقم الناخب", "الاسم الكامل"];
+  const headers = ["اسم اللجنة", "الرقم الفرعي", "العنوان", "رقم الناخب", "الاسم الكامل"];
   const headerRow = worksheet.addRow(headers);
 
   // Style headers
@@ -30,7 +30,6 @@ export async function exportToExcel(data: ExtractedData, filename: string = "ب�
   worksheet.columns = [
     { width: 30 }, // Committee name
     { width: 15 }, // Sub number
-    { width: 40 }, // Location (المقر)
     { width: 45 }, // Address (العنوان)
     { width: 15 }, // Voter serial
     { width: 40 }, // Full name
@@ -42,7 +41,6 @@ export async function exportToExcel(data: ExtractedData, filename: string = "ب�
       const row = worksheet.addRow([
         committee.name,
         committee.subNumber,
-        committee.location || "",
         committee.address || "",
         voter.serialNumber,
         voter.fullName,

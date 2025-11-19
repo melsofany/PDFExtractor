@@ -31,6 +31,7 @@ export type ExtractedData = z.infer<typeof extractedDataSchema>;
 export const excelRowSchema = z.object({
   committeeName: z.string(),
   committeeSubNumber: z.string(),
+  committeeAddress: z.string().optional(),
   voterSerialNumber: z.string(),
   voterFullName: z.string(),
 });

@@ -83,24 +83,20 @@ function extractElectoralData(text: string, totalPages: number): ExtractedData {
         const nextLine = lines[j];
         
         // Check for committee name after "ومقرها:" or "ومـقـرهـا:"
-        if (nextLine.includes('ومـقـرهـا') || nextLine.includes('ومقرها')) {
-          // Extract the text after "ومقرها:" on the same line
-          let nameAfterColon = nextLine.replace(/ومـقـرهـا\s*:?\s*/g, '').replace(/ومقرها\s*:?\s*/g, '').trim();
+        if ((nextLine.includes('ومـقـرهـا') || nextLine.includes('ومقرها')) && !committeeName) {
+          // Try to extract the text after the colon (:)
+          const colonMatch = nextLine.match(/(?:ومـقـرهـا|ومقرها)\s*:\s*(.+)/);
           
-          if (nameAfterColon) {
-            committeeName = nameAfterColon;
+          if (colonMatch && colonMatch[1] && colonMatch[1].trim()) {
+            // Found text after colon on the same line
+            committeeName = colonMatch[1].trim();
           } else {
-            // If nothing on the same line, check the next line
+            // No colon or no text after colon, check the next line
             const nextNextLine = lines[j + 1] || '';
-            if (nextNextLine) {
+            if (nextNextLine && nextNextLine.trim()) {
               committeeName = nextNextLine.trim();
             }
           }
-        }
-        
-        // Check for school/location name if not found yet
-        if ((nextLine.includes('مدرسة') || nextLine.includes('مركز')) && !committeeName) {
-          committeeName = nextLine;
         }
         
         // Check for address (العنوان) - usually contains "شارع" or "وعنوانها"

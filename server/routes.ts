@@ -73,17 +73,36 @@ function extractElectoralData(text: string, totalPages: number): ExtractedData {
         committees.push(currentCommittee);
       }
       
-      // Look ahead for school name and sub-number
+      // Look ahead for school name, address, and sub-number
       let schoolName = '';
+      let location = '';
+      let address = '';
       let subNumber = '000';
       
-      // Next few lines should contain school name and number
-      for (let j = i + 1; j < Math.min(i + 10, lines.length); j++) {
+      // Next few lines should contain school name, address, and number
+      for (let j = i + 1; j < Math.min(i + 15, lines.length); j++) {
         const nextLine = lines[j];
         
-        // Check for school/location name
-        if ((nextLine.includes('مدرسة') || nextLine.includes('مركز')) && !schoolName) {
-          schoolName = nextLine;
+        // Check for school/location name (المقر)
+        if ((nextLine.includes('مدرسة') || nextLine.includes('مركز')) && !location) {
+          location = nextLine;
+          if (!schoolName) {
+            schoolName = nextLine;
+          }
+        }
+        
+        // Check for address (العنوان) - usually contains "شارع" or "وعنوانها"
+        if ((nextLine.includes('شارع') || nextLine.includes('وعنوانها') || 
+             nextLine.includes('عنوان') || nextLine.includes('طريق')) && !address) {
+          address = nextLine.replace('وعنوانها :', '').replace('-', '').trim();
+        }
+        
+        // Check for general headquarters (ومـقـرهـا)
+        if (nextLine.includes('ومـقـرهـا') || nextLine.includes('ومقرها')) {
+          const nextNextLine = lines[j + 1] || '';
+          if ((nextNextLine.includes('مدرسة') || nextNextLine.includes('مركز')) && !location) {
+            location = nextNextLine;
+          }
         }
         
         // Check for sub-number (typically 3 digits)
@@ -99,6 +118,8 @@ function extractElectoralData(text: string, totalPages: number): ExtractedData {
       currentCommittee = {
         name: schoolName || 'لجنة انتخابية',
         subNumber: subNumber,
+        location: location || undefined,
+        address: address || undefined,
         voters: []
       };
       currentVoters = [];

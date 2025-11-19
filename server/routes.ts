@@ -78,36 +78,17 @@ function extractElectoralData(text: string, totalPages: number): ExtractedData {
       let address = '';
       let subNumber = '000';
       
-      // Debug: log lines to see what we're parsing
-      console.log('=== Processing committee at line', i, ':', line);
-      
       // Next few lines should contain school name, address, and number
       for (let j = i + 1; j < Math.min(i + 15, lines.length); j++) {
         const nextLine = lines[j];
-        console.log('  Line', j, ':', nextLine);
         
-        // Check for committee name after "ومقرها:" or "ومـقـرهـا:"
+        // Check for committee name - first line containing school/center/institute
         if (!committeeName) {
-          // Try multiple patterns for "ومقرها"
-          const patterns = [
-            /(?:ومـقـرهـا|ومقرها|مقرها)\s*[:：]\s*(.+)/,  // With colon
-            /(?:ومـقـرهـا|ومقرها|مقرها)\s+(.+)/,          // With space
-          ];
-          
-          for (const pattern of patterns) {
-            const match = nextLine.match(pattern);
-            if (match && match[1] && match[1].trim()) {
-              committeeName = match[1].trim();
-              break;
-            }
-          }
-          
-          // If pattern matched "ومقرها" but no text after, check next line
-          if (!committeeName && (nextLine.includes('ومـقـرهـا') || nextLine.includes('ومقرها') || nextLine.includes('مقرها'))) {
-            const nextNextLine = lines[j + 1] || '';
-            if (nextNextLine && nextNextLine.trim() && !nextNextLine.match(/^\d+$/)) {
-              committeeName = nextNextLine.trim();
-            }
+          // Look for lines containing institution names
+          if (nextLine.includes('مدرسة') || nextLine.includes('معهد') || 
+              nextLine.includes('مركز شباب') || nextLine.includes('الوحدة الصحية') ||
+              nextLine.includes('المدرسة') || nextLine.includes('المعهد')) {
+            committeeName = nextLine.trim();
           }
         }
         

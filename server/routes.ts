@@ -20,11 +20,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "يجب أن يكون الملف من نوع PDF" });
       }
 
-      // Parse PDF - dynamic import for CommonJS module
-      const pdfParse = (await import("pdf-parse")).default;
-      const pdfData = await pdfParse(req.file.buffer);
-      const text = pdfData.text;
-      const numPages = pdfData.numpages;
+      // Parse PDF using pdf-parse v2.x API
+      const pdfParseModule = await import("pdf-parse");
+      const { PDFParse } = pdfParseModule;
+      
+      const parser = new PDFParse({ data: req.file.buffer });
+      const result = await parser.getInfo({ parsePageInfo: true });
+      await parser.destroy();
+      
+      const text = result.pages?.map((p: any) => p.text).join('\n') || '';
+      const numPages = result.total || 0;
 
       // Extract committees and voters from PDF text
       const extractedData = extractElectoralData(text, numPages);

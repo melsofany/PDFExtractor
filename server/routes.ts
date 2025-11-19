@@ -25,10 +25,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { PDFParse } = pdfParseModule;
       
       const parser = new PDFParse({ data: req.file.buffer });
-      const result = await parser.getInfo({ parsePageInfo: true });
+      const result = await parser.getText();
       await parser.destroy();
       
-      const text = result.pages?.map((p: any) => p.text).join('\n') || '';
+      const text = result.text || '';
       const numPages = result.total || 0;
 
       // Extract committees and voters from PDF text

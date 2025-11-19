@@ -78,9 +78,13 @@ function extractElectoralData(text: string, totalPages: number): ExtractedData {
       let address = '';
       let subNumber = '000';
       
+      // Debug: log lines to see what we're parsing
+      console.log('=== Processing committee at line', i, ':', line);
+      
       // Next few lines should contain school name, address, and number
       for (let j = i + 1; j < Math.min(i + 15, lines.length); j++) {
         const nextLine = lines[j];
+        console.log('  Line', j, ':', nextLine);
         
         // Check for committee name after "ومقرها:" or "ومـقـرهـا:"
         if (!committeeName) {

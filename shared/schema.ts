@@ -1,18 +1,37 @@
-import { sql } from "drizzle-orm";
-import { pgTable, text, varchar } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
+// Schema for voter data extracted from PDF
+export const voterSchema = z.object({
+  serialNumber: z.string(),
+  fullName: z.string(),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
+export type Voter = z.infer<typeof voterSchema>;
+
+// Schema for committee data
+export const committeeSchema = z.object({
+  name: z.string(),
+  subNumber: z.string(),
+  voters: z.array(voterSchema),
 });
 
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
+export type Committee = z.infer<typeof committeeSchema>;
+
+// Schema for extracted PDF data
+export const extractedDataSchema = z.object({
+  committees: z.array(committeeSchema),
+  totalVoters: z.number(),
+  totalCommittees: z.number(),
+});
+
+export type ExtractedData = z.infer<typeof extractedDataSchema>;
+
+// Schema for flattened Excel row (committee info repeated for each voter)
+export const excelRowSchema = z.object({
+  committeeName: z.string(),
+  committeeSubNumber: z.string(),
+  voterSerialNumber: z.string(),
+  voterFullName: z.string(),
+});
+
+export type ExcelRow = z.infer<typeof excelRowSchema>;

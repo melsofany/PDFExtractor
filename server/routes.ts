@@ -89,13 +89,13 @@ function extractElectoralData(text: string, totalPages: number): ExtractedData {
               nextLine.includes('مركز شباب') || nextLine.includes('الوحدة الصحية') ||
               nextLine.includes('المدرسة') || nextLine.includes('المعهد')) {
             committeeName = nextLine.trim();
+            
+            // The next line after committee name is the address
+            const addressLine = lines[j + 1];
+            if (addressLine && !addressLine.match(/^[\u0660-\u0669]{2,3}$/) && !addressLine.match(/^\d{2,3}$/)) {
+              address = addressLine.trim();
+            }
           }
-        }
-        
-        // Check for address (العنوان) - usually contains "شارع" or "وعنوانها"
-        if ((nextLine.includes('شارع') || nextLine.includes('وعنوانها') || 
-             nextLine.includes('عنوان') || nextLine.includes('طريق')) && !address) {
-          address = nextLine.replace('وعنوانها :', '').replace('وعنوانها:', '').replace('-', '').trim();
         }
         
         // Check for sub-number (typically 3 digits)
